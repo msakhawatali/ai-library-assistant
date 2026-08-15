@@ -1,8 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.db.database import create_db_and_tables
 from app.models.book import Book 
+from app.api.routers.books import router as books_router
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+app.include_router(books_router, prefix="/api")
+
 
 @app.get("/")
 async def root():
@@ -12,7 +23,3 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
