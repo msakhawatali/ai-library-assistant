@@ -1,10 +1,18 @@
+import os
 from sqlmodel import Session, create_engine, SQLModel
 from app.models.book import Book
 
-engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
+from dotenv import load_dotenv
+load_dotenv()
+
+TEST_DATABASE_URL = os.environ["TEST_DATABASE_URL"]
+
+engine = create_engine(TEST_DATABASE_URL)
+
 
 def setup_module():
     SQLModel.metadata.create_all(engine)
+
 
 def test_insert_and_fetch_book():
     with Session(engine) as session:
@@ -14,5 +22,8 @@ def test_insert_and_fetch_book():
         session.refresh(book)
 
         assert book.id is not None
+
         result = session.get(Book, book.id)
+
+        assert result is not None
         assert result.title == "Clean Code"
