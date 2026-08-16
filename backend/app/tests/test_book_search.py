@@ -43,3 +43,30 @@ def test_search_no_filters_returns_all():
     with Session(engine) as session:
         results = search_books(session)
         assert len(results) == 3
+
+
+def test_search_by_category():
+    with Session(engine) as session:
+        results = search_books(session, category="Programming")
+
+        assert len(results) == 2
+
+
+def test_search_by_year():
+    with Session(engine) as session:
+        results = search_books(session, year=2022)
+
+        assert len(results) == 1
+        assert results[0].title == "Advanced Python"
+
+def test_search_with_multiple_filters():
+    with Session(engine) as session:
+        results = search_books(
+            session,
+            category="Programming",
+            author="Guido",
+            available=True,
+        )
+
+        assert len(results) == 1
+        assert results[0].title == "Learn Python"
