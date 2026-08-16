@@ -3,6 +3,7 @@ from sqlmodel import Session
 
 from app.db.database import get_session
 from app.schemas.book import BookCreate, BookRead, BookUpdate
+from app.services.book_search import search_books
 from app.services.book import (
     create_book,
     delete_book,
@@ -76,3 +77,22 @@ def delete_existing_book(
         )
 
     delete_book(book, session)
+
+
+@router.get("/search", response_model=list[BookRead])
+def search_books_endpoint(
+    title: str | None = None,
+    author: str | None = None,
+    category: str | None = None,
+    year: int | None = None,
+    available: bool | None = None,
+    session: Session = Depends(get_session),
+):
+    return search_books(
+        session,
+        title=title,
+        author=author,
+        category=category,
+        year=year,
+        available=available,
+    )
