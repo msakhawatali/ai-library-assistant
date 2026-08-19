@@ -1,9 +1,9 @@
-from sqlmodel import SQLModel
+from pydantic import BaseModel
 
 
-class ChatRequest(SQLModel):
+class ChatRequest(BaseModel):
     message: str
 
 
-class ChatResponse(SQLModel):
+class ChatResponse(BaseModel):
     response: str
