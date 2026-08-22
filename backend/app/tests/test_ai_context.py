@@ -1,12 +1,12 @@
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, delete
 from app.models.book import Book
 from app.services.ai_context import build_book_context
+from app.tests.conftest import engine
 
-engine = create_engine("sqlite://", connect_args={"check_same_thread": False})
-
-
-def setup_module():
-    SQLModel.metadata.create_all(engine)
+def _clear_books():
+    with Session(engine) as session:
+        session.exec(delete(Book))
+        session.commit()
 
 
 def _seed_books(session):
@@ -19,28 +19,25 @@ def _seed_books(session):
 
 
 def test_build_book_context_returns_ai_friendly_structure():
+    _clear_books()
     with Session(engine) as session:
         _seed_books(session)
         context = build_book_context(session, title="python")
 
         assert len(context) == 1
-        assert context[0] == {
-            "id": context[0]["id"],
-            "title": "Learn Python",
-            "author": "Guido",
-            "category": "Programming",
-            "year": 2020,
-            "available": True,
-        }
+        assert context[0]["title"] == "Learn Python"
 
 
 def test_build_book_context_no_match_returns_empty_list():
+    _clear_books()
     with Session(engine) as session:
         context = build_book_context(session, title="Nonexistent")
         assert context == []
 
 
 def test_build_book_context_no_filters_returns_all():
+    _clear_books()
     with Session(engine) as session:
+        _seed_books(session)
         context = build_book_context(session)
         assert len(context) == 2

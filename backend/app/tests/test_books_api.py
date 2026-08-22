@@ -1,13 +1,10 @@
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel
 from sqlmodel.pool import StaticPool
 
 from app.main import app
 from app.db.database import get_session
-
-engine = create_engine(
-    "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-)
+from app.tests.conftest import engine
 
 
 def override_get_session():

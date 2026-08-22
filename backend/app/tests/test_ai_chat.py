@@ -13,7 +13,7 @@ def test_chat_endpoint_returns_ai_response(mock_generate):
 
     assert response.status_code == 200
     assert response.json() == {"response": "Python is a programming language."}
-    mock_generate.assert_called_once_with("What is Python?")
+    mock_generate.assert_called_once_with("What is Python?", book_context=[])
 
 
 @patch("app.services.ai_service.get_openai_client")
