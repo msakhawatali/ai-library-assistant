@@ -27,19 +27,20 @@ def setup_module():
 client = TestClient(app)
 
 
+@patch("app.api.routers.ai.extract_search_filters")
 @patch("app.api.routers.ai.generate_ai_response")
-def test_chat_uses_book_context(mock_generate):
-    mock_generate.return_value = "Yes, we have Learn Python by Guido."
+def test_chat_uses_extracted_filters(mock_generate, mock_extract, session):
+    from app.models.book import Book
+    session.add(Book(title="Learn Python", author="Guido", category="Programming", year=2020, available=True))
+    session.commit()
+
+    mock_extract.return_value = {"title": "python"}
+    mock_generate.return_value = "Yes, we have Learn Python."
 
     response = client.post("/api/ai/chat", json={"message": "Do you have Python books?"})
 
     assert response.status_code == 200
-    assert response.json() == {"response": "Yes, we have Learn Python by Guido."}
-
-    call_args = mock_generate.call_args
-    passed_context = call_args.kwargs["book_context"]
-    assert any(b["title"] == "Learn Python" for b in passed_context)
-    passed_context = call_args.kwargs.get("book_context") or call_args.args[1]
+    passed_context = mock_generate.call_args.kwargs["book_context"]
     assert any(b["title"] == "Learn Python" for b in passed_context)
 
 

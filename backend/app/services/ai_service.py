@@ -1,9 +1,38 @@
+import json
 from openai import OpenAI
 from app.core.config import settings
 
 
 def get_openai_client() -> OpenAI:
     return OpenAI(api_key=settings.openai_api_key)
+
+
+def extract_search_filters(message: str) -> dict:
+    client = get_openai_client()
+
+    system_prompt = (
+        "Extract book search filters from the user's message. "
+        "Return ONLY a JSON object with these optional keys: "
+        "title, author, category, year (integer), available (boolean). "
+        "Only include keys that are clearly mentioned in the message. "
+        "If no filters can be identified, return an empty JSON object {}."
+    )
+
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": message},
+        ],
+        response_format={"type": "json_object"},
+    )
+
+    try:
+        filters = json.loads(completion.choices[0].message.content)
+    except (json.JSONDecodeError, TypeError):
+        filters = {}
+
+    return filters
 
 
 
