@@ -46,14 +46,30 @@ def generate_ai_response(message: str, book_context: list[dict] | None = None) -
             for b in book_context
         )
         system_prompt = (
-            "You are a helpful library assistant. Use the following book information "
-            "to answer the user's question. If no relevant books are listed, say so.\n\n"
-            f"Available books:\n{context_text}"
+            "You are a helpful library assistant. Below is the ONLY book "
+            "information you are allowed to use when answering.\n\n"
+            f"Available books:\n{context_text}\n\n"
+            "Rules you must follow strictly:\n"
+            "1. Only use the book information provided above. Never invent "
+            "or assume books, authors, categories, years, or availability "
+            "that are not listed here.\n"
+            "2. If one or more of the listed books match the user's "
+            "question, answer using only that information.\n"
+            "3. If none of the listed books match the user's question, "
+            "clearly tell the user that no relevant books were found — "
+            "do not make up a book to satisfy the question.\n"
+            "4. If the user's question is unrelated to the library or "
+            "books entirely, give a simple, helpful response without "
+            "referencing or inventing any library data."
         )
     else:
         system_prompt = (
-            "You are a helpful library assistant. No matching books were found "
-            "in the library for this query."
+            "You are a helpful library assistant. No book context is "
+            "available for this query. Do not invent or assume any book, "
+            "author, category, year, or availability information. If the "
+            "question is about the library, tell the user no relevant "
+            "books were found. If the question is unrelated to the "
+            "library, give a simple, helpful response."
         )
 
     completion = client.chat.completions.create(
