@@ -1,6 +1,7 @@
 import json
 from openai import OpenAI
 from app.core.config import settings
+from app.schemas.chat import ChatMessage
 
 
 def get_openai_client() -> OpenAI:
@@ -37,7 +38,7 @@ def extract_search_filters(message: str) -> dict:
 
 
 
-def generate_ai_response(message: str, book_context: list[dict] | None = None) -> str:
+def generate_ai_response(message: str, book_context: list[dict] | None = None, history: list[ChatMessage] | None = None,) -> str:
     client = get_openai_client()
     if book_context:
         context_text = "\n".join(
@@ -72,11 +73,15 @@ def generate_ai_response(message: str, book_context: list[dict] | None = None) -
             "library, give a simple, helpful response."
         )
 
+    messages = [{"role": "system", "content": system_prompt}]
+
+    if history:
+        messages.extend({"role": m.role, "content": m.content} for m in history)
+
+    messages.append({"role": "user", "content": message})
+
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": message},
-        ],
+        messages=messages,
     )
     return completion.choices[0].message.content

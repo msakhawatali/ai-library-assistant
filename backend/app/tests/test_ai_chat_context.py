@@ -37,7 +37,10 @@ def test_chat_uses_extracted_filters(mock_generate, mock_extract, session):
     mock_extract.return_value = {"title": "python"}
     mock_generate.return_value = "Yes, we have Learn Python."
 
-    response = client.post("/api/ai/chat", json={"message": "Do you have Python books?"})
+    response = client.post("/api/ai/chat", json={
+    "message": "Do you have Python books?",
+    "conversation_id": "conv1",
+    })
 
     assert response.status_code == 200
     passed_context = mock_generate.call_args.kwargs["book_context"]
@@ -56,3 +59,26 @@ def test_generate_ai_response_handles_no_books(mock_get_client):
 
     result = generate_ai_response("Do you have anything?", book_context=[])
     assert result == "No books found."
+
+@patch("app.api.routers.ai.get_history")
+@patch("app.api.routers.ai.extract_search_filters")
+@patch("app.api.routers.ai.generate_ai_response")
+def test_chat_includes_previous_messages(mock_generate, mock_extract, mock_get_history, client, session):
+    from app.schemas.chat import ChatMessage
+
+    mock_extract.return_value = {}
+    mock_get_history.return_value = [
+        ChatMessage(role="user", content="What Python books are available?"),
+        ChatMessage(role="assistant", content="Here are the available Python books..."),
+    ]
+    mock_generate.return_value = "The beginner one is easier."
+
+    response = client.post("/api/ai/chat", json={
+        "message": "Which one is better for beginners?",
+        "conversation_id": "conv1",
+    })
+
+    assert response.status_code == 200
+    passed_history = mock_generate.call_args.kwargs["history"]
+    assert len(passed_history) == 2
+    assert passed_history[0].content == "What Python books are available?"

@@ -9,11 +9,14 @@ client = TestClient(app)
 def test_chat_endpoint_returns_ai_response(mock_generate):
     mock_generate.return_value = "Python is a programming language."
 
-    response = client.post("/api/ai/chat", json={"message": "What is Python?"})
+    response = client.post("/api/ai/chat", json={
+    "message": "What is Python?",
+    "conversation_id": "conv1",
+    })
 
     assert response.status_code == 200
     assert response.json() == {"response": "Python is a programming language."}
-    mock_generate.assert_called_once_with("What is Python?", book_context=[])
+    mock_generate.assert_called_once_with("What is Python?", book_context=[], history=[])
 
 
 @patch("app.services.ai_service.get_openai_client")
