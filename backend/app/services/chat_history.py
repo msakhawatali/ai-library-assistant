@@ -4,7 +4,7 @@ _conversations: dict[str, list[ChatMessage]] = {}
 
 
 def get_history(conversation_id: str) -> list[ChatMessage]:
-    return _conversations.get(conversation_id, [])
+    return list(_conversations.get(conversation_id, []))
 
 
 def add_message(conversation_id: str, role: str, content: str) -> None:

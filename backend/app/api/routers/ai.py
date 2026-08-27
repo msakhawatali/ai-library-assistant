@@ -23,7 +23,7 @@ def chat(request: ChatRequest, session: Session = Depends(get_session)):
         available=filters.get("available"),
     )
     history = get_history(request.conversation_id)
-    ai_text = generate_ai_response(request.message, book_context=book_context, history=history)
     add_message(request.conversation_id, "user", request.message)
+    ai_text = generate_ai_response(request.message, book_context=book_context, history=history)
     add_message(request.conversation_id, "assistant", ai_text)
     return ChatResponse(response=ai_text)

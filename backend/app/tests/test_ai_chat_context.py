@@ -29,7 +29,7 @@ client = TestClient(app)
 
 @patch("app.api.routers.ai.extract_search_filters")
 @patch("app.api.routers.ai.generate_ai_response")
-def test_chat_uses_extracted_filters(mock_generate, mock_extract, session):
+def test_chat_uses_extracted_filters(mock_generate, mock_extract, client, session):
     from app.models.book import Book
     session.add(Book(title="Learn Python", author="Guido", category="Programming", year=2020, available=True))
     session.commit()
@@ -82,3 +82,32 @@ def test_chat_includes_previous_messages(mock_generate, mock_extract, mock_get_h
     passed_history = mock_generate.call_args.kwargs["history"]
     assert len(passed_history) == 2
     assert passed_history[0].content == "What Python books are available?"
+
+
+@patch("app.api.routers.ai.extract_search_filters")
+@patch("app.api.routers.ai.generate_ai_response")
+def test_chat_history_persists_across_requests(mock_generate, mock_extract, client, session):
+    mock_extract.return_value = {}
+    mock_generate.return_value = "First response"
+
+    # Pehli request
+    client.post("/api/ai/chat", json={
+        "message": "What Python books are available?",
+        "conversation_id": "conv-persist-test",
+    })
+
+    mock_generate.return_value = "Second response"
+
+    # Dusri request — same conversation_id
+    client.post("/api/ai/chat", json={
+        "message": "Which one is better for beginners?",
+        "conversation_id": "conv-persist-test",
+    })
+
+    # Doosri call mein history mein pehla exchange included hona chahiye
+    second_call_history = mock_generate.call_args.kwargs["history"]
+    assert len(second_call_history) == 2  # pehla user message + pehla assistant response
+    assert second_call_history[0].role == "user"
+    assert second_call_history[0].content == "What Python books are available?"
+    assert second_call_history[1].role == "assistant"
+    assert second_call_history[1].content == "First response"

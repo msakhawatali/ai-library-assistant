@@ -73,10 +73,11 @@ def generate_ai_response(message: str, book_context: list[dict] | None = None, h
             "library, give a simple, helpful response."
         )
 
-    messages = [{"role": "system", "content": system_prompt}]
+    messages: list[dict] = [{"role": "system", "content": system_prompt}]
 
     if history:
-        messages.extend({"role": m.role, "content": m.content} for m in history)
+        for m in history:
+            messages.append({"role": m.role, "content": m.content})
 
     messages.append({"role": "user", "content": message})
 
