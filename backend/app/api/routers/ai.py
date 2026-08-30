@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
-from app.services.ai_service import generate_ai_response, extract_search_filters
+from fastapi import APIRouter, Depends, HTTPException, status
+from app.services.ai_service import generate_ai_response, extract_search_filters, AIServiceError
 from app.schemas.ai import ChatRequest, ChatResponse
 from app.services.ai_context import build_book_context
 from app.db.database import get_session
@@ -24,6 +24,13 @@ def chat(request: ChatRequest, session: Session = Depends(get_session)):
     )
     history = get_history(request.conversation_id)
     add_message(request.conversation_id, "user", request.message)
-    ai_text = generate_ai_response(request.message, book_context=book_context, history=history)
+    try:
+        ai_text = generate_ai_response(request.message, book_context=book_context, history=history)
+    except AIServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI service is currently unavailable. Please try again later.",
+        )
+
     add_message(request.conversation_id, "assistant", ai_text)
     return ChatResponse(response=ai_text)
