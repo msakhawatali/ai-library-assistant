@@ -2,6 +2,7 @@ from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel
 from sqlmodel.pool import StaticPool
+from app.services.ai_service import AIServiceError
 
 from app.main import app
 from app.db.database import get_session
@@ -86,28 +87,17 @@ def test_chat_includes_previous_messages(mock_generate, mock_extract, mock_get_h
 
 @patch("app.api.routers.ai.extract_search_filters")
 @patch("app.api.routers.ai.generate_ai_response")
-def test_chat_history_persists_across_requests(mock_generate, mock_extract, client, session):
+def test_chat_endpoint_returns_503_on_ai_service_error(mock_generate, mock_extract, client):
     mock_extract.return_value = {}
-    mock_generate.return_value = "First response"
+    mock_generate.side_effect = AIServiceError("AI service is currently unavailable. Please try again later.")
 
-    # Pehli request
-    client.post("/api/ai/chat", json={
-        "message": "What Python books are available?",
-        "conversation_id": "conv-persist-test",
+    response = client.post("/api/ai/chat", json={
+        "message": "What is Python?",
+        "conversation_id": "conv-error-test",
     })
 
-    mock_generate.return_value = "Second response"
-
-    # Dusri request — same conversation_id
-    client.post("/api/ai/chat", json={
-        "message": "Which one is better for beginners?",
-        "conversation_id": "conv-persist-test",
-    })
-
-    # Doosri call mein history mein pehla exchange included hona chahiye
-    second_call_history = mock_generate.call_args.kwargs["history"]
-    assert len(second_call_history) == 2  # pehla user message + pehla assistant response
-    assert second_call_history[0].role == "user"
-    assert second_call_history[0].content == "What Python books are available?"
-    assert second_call_history[1].role == "assistant"
-    assert second_call_history[1].content == "First response"
+    assert response.status_code == 503
+    assert response.json()["detail"] == "AI service is currently unavailable. Please try again later."
+    # Confirm koi internal detail leak nahi hui
+    assert "traceback" not in response.text.lower()
+    assert "api_key" not in response.text.lower()

@@ -1,7 +1,11 @@
 import json
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 from app.core.config import settings
 from app.schemas.chat import ChatMessage
+
+class AIServiceError(Exception):
+    """Raised when the AI service fails to generate a response."""
+    pass
 
 
 def get_openai_client() -> OpenAI:
@@ -19,21 +23,18 @@ def extract_search_filters(message: str) -> dict:
         "If no filters can be identified, return an empty JSON object {}."
     )
 
-    completion = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": message},
-        ],
-        response_format={"type": "json_object"},
-    )
-
     try:
-        filters = json.loads(completion.choices[0].message.content)
-    except (json.JSONDecodeError, TypeError):
-        filters = {}
-
-    return filters
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": message},
+            ],
+            response_format={"type": "json_object"},
+        )
+        return json.loads(completion.choices[0].message.content)
+    except (OpenAIError, json.JSONDecodeError, TypeError, Exception):
+        return {}
 
 
 
@@ -81,8 +82,13 @@ def generate_ai_response(message: str, book_context: list[dict] | None = None, h
 
     messages.append({"role": "user", "content": message})
 
-    completion = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-    )
-    return completion.choices[0].message.content
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+        )
+        return completion.choices[0].message.content
+    except OpenAIError:
+        raise AIServiceError("AI service is currently unavailable. Please try again later.")
+    except Exception:
+        raise AIServiceError("AI service is currently unavailable. Please try again later.")
