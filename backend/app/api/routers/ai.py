@@ -29,7 +29,7 @@ def chat(request: ChatRequest, session: Session = Depends(get_session)):
     except AIServiceError as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(e),
+            detail="AI service is currently unavailable. Please try again later.",
         )
 
     add_message(request.conversation_id, "assistant", ai_text)
