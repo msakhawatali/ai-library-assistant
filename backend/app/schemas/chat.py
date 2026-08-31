@@ -6,4 +6,5 @@ class ChatMessage(SQLModel):
     role: Literal["user", "assistant"]
     content: str
 
-
+class ConversationHistoryResponse(SQLModel):
+    messages: list[ChatMessage]
