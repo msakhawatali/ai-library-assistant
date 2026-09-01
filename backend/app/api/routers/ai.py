@@ -34,7 +34,7 @@ def chat(request: ChatRequest, session: Session = Depends(get_session)):
         )
 
     add_message(request.conversation_id, "assistant", ai_text)
-    return ChatResponse(response=ai_text)
+    return ChatResponse(response=ai_text, conversation_id=request.conversation_id)
 
 @router.get("/conversations/{conversation_id}/messages", response_model=ConversationHistoryResponse)
 def get_conversation_messages(conversation_id: str):
