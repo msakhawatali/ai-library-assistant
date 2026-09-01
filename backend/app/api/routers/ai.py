@@ -27,14 +27,14 @@ def chat(request: ChatRequest, session: Session = Depends(get_session)):
     add_message(request.conversation_id, "user", request.message)
     try:
         ai_text = generate_ai_response(request.message, book_context=book_context, history=history)
-    except AIServiceError as e:
+    except AIServiceError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI service is currently unavailable. Please try again later.",
         )
 
     add_message(request.conversation_id, "assistant", ai_text)
-    return ChatResponse(response=ai_text)
+    return ChatResponse(response=ai_text, conversation_id=request.conversation_id)
 
 @router.get("/conversations/{conversation_id}/messages", response_model=ConversationHistoryResponse)
 def get_conversation_messages(conversation_id: str):
