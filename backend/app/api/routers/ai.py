@@ -5,6 +5,7 @@ from app.services.ai_context import build_book_context
 from app.db.database import get_session
 from sqlmodel import Session
 from app.services.chat_history import get_history, add_message
+from app.schemas.chat import ConversationHistoryResponse
 
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -34,3 +35,8 @@ def chat(request: ChatRequest, session: Session = Depends(get_session)):
 
     add_message(request.conversation_id, "assistant", ai_text)
     return ChatResponse(response=ai_text)
+
+@router.get("/conversations/{conversation_id}/messages", response_model=ConversationHistoryResponse)
+def get_conversation_messages(conversation_id: str):
+    messages = get_history(conversation_id)
+    return ConversationHistoryResponse(messages=messages)
