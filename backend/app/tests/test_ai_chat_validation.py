@@ -53,3 +53,6 @@ def test_chat_accepts_valid_request(mock_generate, mock_extract, client):
     })
 
     assert response.status_code == 200
+    assert response.json()["response"] == "Here are the available Python books..."
+    assert response.json()["conversation_id"] == "conv-1"
+
