@@ -1,7 +1,29 @@
 import json
 from openai import OpenAI, OpenAIError
+from sqlmodel import Session
 from app.core.config import settings
 from app.schemas.chat import ChatMessage
+from app.services.book_search import search_books
+
+SEARCH_BOOKS_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "search_books",
+        "description": "Search the library's book database using optional filters.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "description": "Book title to search for"},
+                "author": {"type": "string", "description": "Author name to search for"},
+                "category": {"type": "string", "description": "Book category/genre"},
+                "year": {"type": "integer", "description": "Publication year"},
+                "available": {"type": "boolean", "description": "Whether the book is currently available"},
+            },
+            "required": [],
+        },
+    },
+}
+
 
 class AIServiceError(Exception):
     """Raised when the AI service fails to generate a response."""
@@ -88,6 +110,80 @@ def generate_ai_response(message: str, book_context: list[dict] | None = None, h
             messages=messages,
         )
         return completion.choices[0].message.content
+    except OpenAIError:
+        raise AIServiceError("AI service is currently unavailable. Please try again later.")
+    except Exception:
+        raise AIServiceError("AI service is currently unavailable. Please try again later.")
+
+
+def _execute_search_books_tool(session: Session, arguments: dict) ->list[dict]:
+    books = search_books(
+        session,
+        title=arguments.get("title"),
+        author=arguments.get("author"),
+        category=arguments.get("category"),
+        year=arguments.get("year"),
+        available=arguments.get("available"),
+    )
+    return [
+        {
+            "id": b.id, "title": b.title, "author": b.author,
+            "category": b.category, "year": b.year, "available": b.available,
+        }
+        for b in books
+    ]
+
+def generate_ai_response_with_tools(
+        session: Session,
+        message: str,
+        history: list[ChatMessage] |  None = None,
+) -> str:
+    client = get_openai_client()
+
+    system_prompt = (
+        "You are a helpful library assistant. When the user asks about books, "
+        "use the search_books tool to find relevant books before answering. "
+        "Only use information retruned by the tool - never invent books, "
+        "authors, years, or available. If the tool return no result, "
+        "tell the user no relevant books ware found."
+    )
+
+    messages: list[dict] = [{"role": "system", "content": system_prompt}]
+    if history:
+        for m in history:
+            messages.append({"role": m.role, "content": m.content})
+    messages.append({"role": "user", "content": message})
+
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            tools=[SEARCH_BOOKS_TOOL],
+            tool_choice="auto"
+        )
+        response_message = completion.choices[0].message
+
+        if response_message.tool_calls:
+            messages.append(response_message)
+
+            for tool_call in response_message.tool_calls:
+                arguments = json.loads(tool_call.function.arguments)
+                result = _execute_search_books_tool(session, arguments)
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": json.dumps(result),
+                })
+
+            follow_up = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages,
+            )
+            return follow_up.choices[0].message.content
+
+        return response_message.content
+
     except OpenAIError:
         raise AIServiceError("AI service is currently unavailable. Please try again later.")
     except Exception:
