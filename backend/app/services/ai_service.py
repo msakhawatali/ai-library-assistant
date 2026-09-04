@@ -164,7 +164,21 @@ def generate_ai_response_with_tools(
         response_message = completion.choices[0].message
 
         if response_message.tool_calls:
-            messages.append(response_message)
+            messages.append({
+                "role": "assistant",
+                "content": response_message.content,
+                "tool_calls": [
+                    {
+                        "id": tool_call.id,
+                        "type": "function",
+                        "function": {
+                            "name": tool_call.function.name,
+                            "arguments": tool_call.function.arguments,
+                        },
+                    }
+                    for tool_call in response_message.tool_calls
+                ],
+            })
 
             for tool_call in response_message.tool_calls:
                 arguments = json.loads(tool_call.function.arguments)

@@ -1,5 +1,9 @@
 from unittest.mock import patch, MagicMock
-from app.services.ai_service import generate_ai_response_with_tools, _execute_search_books_tool
+from app.services.ai_service import (
+    generate_ai_response_with_tools,
+    _execute_search_books_tool,
+    SEARCH_BOOKS_TOOL,
+)
 
 
 def test_execute_search_books_tool_calls_search_service(session):
