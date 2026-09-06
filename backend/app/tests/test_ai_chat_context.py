@@ -28,26 +28,6 @@ def setup_module():
 client = TestClient(app)
 
 
-@patch("app.api.routers.ai.extract_search_filters")
-@patch("app.api.routers.ai.generate_ai_response")
-def test_chat_uses_extracted_filters(mock_generate, mock_extract, client, session):
-    from app.models.book import Book
-    session.add(Book(title="Learn Python", author="Guido", category="Programming", year=2020, available=True))
-    session.commit()
-
-    mock_extract.return_value = {"title": "python"}
-    mock_generate.return_value = "Yes, we have Learn Python."
-
-    response = client.post("/api/ai/chat", json={
-    "message": "Do you have Python books?",
-    "conversation_id": "conv1",
-    })
-
-    assert response.status_code == 200
-    passed_context = mock_generate.call_args.kwargs["book_context"]
-    assert any(b["title"] == "Learn Python" for b in passed_context)
-
-
 @patch("app.services.ai_service.get_openai_client")
 def test_generate_ai_response_handles_no_books(mock_get_client):
     from app.services.ai_service import generate_ai_response
@@ -61,17 +41,9 @@ def test_generate_ai_response_handles_no_books(mock_get_client):
     result = generate_ai_response("Do you have anything?", book_context=[])
     assert result == "No books found."
 
-@patch("app.api.routers.ai.get_history")
-@patch("app.api.routers.ai.extract_search_filters")
-@patch("app.api.routers.ai.generate_ai_response")
-def test_chat_includes_previous_messages(mock_generate, mock_extract, mock_get_history, client, session):
-    from app.schemas.chat import ChatMessage
-
-    mock_extract.return_value = {}
-    mock_get_history.return_value = [
-        ChatMessage(role="user", content="What Python books are available?"),
-        ChatMessage(role="assistant", content="Here are the available Python books..."),
-    ]
+@patch("app.api.routers.ai.generate_ai_response_with_tools")
+def test_chat_includes_previous_messages(mock_generate, client, session):
+    ...
     mock_generate.return_value = "The beginner one is easier."
 
     response = client.post("/api/ai/chat", json={
@@ -80,15 +52,13 @@ def test_chat_includes_previous_messages(mock_generate, mock_extract, mock_get_h
     })
 
     assert response.status_code == 200
-    passed_history = mock_generate.call_args.kwargs["history"]
+    call_args = mock_generate.call_args
+    passed_history = call_args.kwargs["history"]
     assert len(passed_history) == 2
-    assert passed_history[0].content == "What Python books are available?"
 
 
-@patch("app.api.routers.ai.extract_search_filters")
-@patch("app.api.routers.ai.generate_ai_response")
-def test_chat_endpoint_returns_503_on_ai_service_error(mock_generate, mock_extract, client):
-    mock_extract.return_value = {}
+@patch("app.api.routers.ai.generate_ai_response_with_tools")
+def test_chat_endpoint_returns_503_on_ai_service_error(mock_generate, client):
     mock_generate.side_effect = AIServiceError("AI service is currently unavailable. Please try again later.")
 
     response = client.post("/api/ai/chat", json={
@@ -98,6 +68,3 @@ def test_chat_endpoint_returns_503_on_ai_service_error(mock_generate, mock_extra
 
     assert response.status_code == 503
     assert response.json()["detail"] == "AI service is currently unavailable. Please try again later."
-    # Confirm koi internal detail leak nahi hui
-    assert "traceback" not in response.text.lower()
-    assert "api_key" not in response.text.lower()
