@@ -1,10 +1,8 @@
 from unittest.mock import patch
 
 
-@patch("app.api.routers.ai.extract_search_filters")
-@patch("app.api.routers.ai.generate_ai_response")
-def test_chat_response_includes_conversation_id(mock_generate, mock_extract, client):
-    mock_extract.return_value = {}
+@patch("app.api.routers.ai.generate_ai_response_with_tools")
+def test_chat_response_includes_conversation_id(mock_generate, client):
     mock_generate.return_value = "Some response"
 
     response = client.post("/api/ai/chat", json={

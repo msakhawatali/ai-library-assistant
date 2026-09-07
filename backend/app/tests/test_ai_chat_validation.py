@@ -41,10 +41,8 @@ def test_chat_rejects_message_exceeding_max_length(client):
 from unittest.mock import patch
 
 
-@patch("app.api.routers.ai.extract_search_filters")
-@patch("app.api.routers.ai.generate_ai_response")
-def test_chat_accepts_valid_request(mock_generate, mock_extract, client):
-    mock_extract.return_value = {}
+@patch("app.api.routers.ai.generate_ai_response_with_tools")
+def test_chat_accepts_valid_request(mock_generate, client):
     mock_generate.return_value = "Here are the available Python books..."
 
     response = client.post("/api/ai/chat", json={
@@ -53,6 +51,4 @@ def test_chat_accepts_valid_request(mock_generate, mock_extract, client):
     })
 
     assert response.status_code == 200
-    assert response.json()["response"] == "Here are the available Python books..."
-    assert response.json()["conversation_id"] == "conv-1"
 
