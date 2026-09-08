@@ -59,6 +59,18 @@ backend/
 
 ---
 
+## Database Setup
+
+1. Install PostgreSQL and create two databases:
+```sql
+   CREATE DATABASE library_db;
+   CREATE DATABASE library_test_db;
+```
+2. Set `DATABASE_URL` and `TEST_DATABASE_URL` in your `.env` file to point to these databases.
+3. Tables are created automatically on app startup via the `lifespan` handler — no manual migration needed.
+
+---
+
 ## Setup
 
 ### 1. Install dependencies
