@@ -4,6 +4,7 @@ from app.db.database import create_db_and_tables
 from app.models.book import Book 
 from app.api.routers.books import router as books_router
 from app.api.routers.ai import router as ai_router
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -26,3 +27,10 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)

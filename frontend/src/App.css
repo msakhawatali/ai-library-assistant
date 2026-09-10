@@ -93,3 +93,22 @@
 .chat-input button:hover {
   background-color: #2563eb;
 }
+
+.chat-error {
+  padding: 0.5rem 0.75rem;
+  color: #dc2626;
+  background-color: #fef2f2;
+  font-size: 0.875rem;
+  border-top: 1px solid #fecaca;
+}
+
+.chat-loading {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.chat-input input:disabled,
+.chat-input button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
