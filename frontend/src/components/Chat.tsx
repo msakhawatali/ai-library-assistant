@@ -1,19 +1,13 @@
 import { useState, useRef } from "react";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
-
-const API_URL = "http://127.0.0.1:8000/api/ai/chat";
+import { sendChatMessage } from "../services/aiApi";
+import type { ChatMessage } from "../services/aiApi";
 
 export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // conversation_id ek dafa generate hoga, poore component life-cycle mein wahi rahega
   const conversationId = useRef(crypto.randomUUID());
 
   const handleSend = async () => {
@@ -26,20 +20,7 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: trimmed,
-          conversation_id: conversationId.current,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Request failed");
-      }
-
-      const data = await response.json();
+      const data = await sendChatMessage(trimmed, conversationId.current);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: data.response },

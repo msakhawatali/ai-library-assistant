@@ -9,7 +9,12 @@ SEARCH_BOOKS_TOOL = {
     "type": "function",
     "function": {
         "name": "search_books",
-        "description": "Search the library's book database using optional filters.",
+        "description": (
+            "Search the library's book database using optional filters. "
+            "When the user mentions a topic or genre (e.g. 'Python books'), "
+            "prefer searching by 'category' as well as 'title', since topics "
+            "are often stored as categories."
+            ),
         "parameters": {
             "type": "object",
             "properties": {
@@ -146,6 +151,7 @@ def generate_ai_response_with_tools(
         "Only use information retruned by the tool - never invent books, "
         "authors, years, or available. If the tool return no result, "
         "tell the user no relevant books ware found."
+        "Do not use Markdown formatting (no **, -, #, etc.) since the response is displayed as plain text."
     )
 
     messages: list[dict] = [{"role": "system", "content": system_prompt}]
