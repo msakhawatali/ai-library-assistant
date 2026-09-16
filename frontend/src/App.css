@@ -112,3 +112,38 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.books-status {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+}
+
+.books-error {
+  color: #dc2626;
+}
+
+.books-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.book-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: #ffffff;
+}
+
+.book-card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.book-card p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: #475569;
+}
