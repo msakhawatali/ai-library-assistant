@@ -1,5 +1,6 @@
 import Header from "./components/Header";
 import Chat from "./components/Chat";
+import Books from "./components/Books";
 import "./App.css";
 
 function App() {
@@ -7,6 +8,7 @@ function App() {
     <div className="app">
       <Header />
       <main className="main-content">
+        <Books />
         <Chat />
       </main>
     </div>
