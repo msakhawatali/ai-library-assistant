@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { getAllBooks } from "../services/booksApi";
 import type { Book } from "../services/booksApi";
+import EditBookForm from "./EditBookForm";
 
 export default function Books() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -34,6 +36,22 @@ export default function Books() {
     return <p className="books-status">No books found.</p>;
   }
 
+    if (editingId !== null) {
+    return (
+      <EditBookForm
+        bookId={editingId}
+        onBookUpdated={() => {
+          setEditingId(null);
+          setIsLoading(true);
+          getAllBooks()
+            .then(setBooks)
+            .catch(() => setError("Could not load books. Please try again later."))
+            .finally(() => setIsLoading(false));
+        }}
+      />
+    );
+  }
+
   return (
     <div className="books-list">
       {books.map((book) => (
@@ -51,6 +69,7 @@ export default function Books() {
           <p>
             <strong>Available:</strong> {book.available ? "Yes" : "No"}
           </p>
+          <button onClick={() => setEditingId(book.id)}>Edit</button>
         </div>
       ))}
     </div>

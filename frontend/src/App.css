@@ -207,3 +207,23 @@
   width: 100%;
   max-width: 500px;
 }
+.book-card button {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  background-color: #64748b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.book-card button:hover {
+  background-color: #475569;
+}
+
+.form-status {
+  text-align: center;
+  padding: 1rem;
+  color: #64748b;
+}
