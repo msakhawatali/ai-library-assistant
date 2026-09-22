@@ -227,3 +227,22 @@
   padding: 1rem;
   color: #64748b;
 }
+
+.book-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.delete-button {
+  background-color: #dc2626 !important;
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: #b91c1c !important;
+}
+
+.delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
