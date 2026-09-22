@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { getAllBooks } from "../services/booksApi";
+import { useEffect, useState, useCallback } from "react";
+import { getAllBooks, deleteBook } from "../services/booksApi";
 import type { Book } from "../services/booksApi";
 import EditBookForm from "./EditBookForm";
 
@@ -8,45 +8,59 @@ export default function Books() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const data = await getAllBooks();
-        setBooks(data);
-      } catch {
-        setError("Could not load books. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBooks();
+  const fetchBooks = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getAllBooks();
+      setBooks(data);
+    } catch {
+      setError("Could not load books. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  if (isLoading) {
-    return <p className="books-status">Loading books...</p>;
-  }
+  useEffect(() => {
+    fetchBooks();
+  }, [fetchBooks]);
 
-  if (error) {
-    return <p className="books-status books-error">{error}</p>;
-  }
 
-  if (books.length === 0) {
-    return <p className="books-status">No books found.</p>;
-  }
+  const handleDelete = async (id: number) => {
+    if (deletingId !== null) return; // ek waqt mein ek hi delete allowed
 
-    if (editingId !== null) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this book?"
+    );
+    if (!confirmed) return;
+
+    setDeleteError(null);
+    setDeletingId(id);
+
+    try {
+      await deleteBook(id);
+      setBooks((prev) => prev.filter((book) => book.id !== id));
+    } catch {
+      setDeleteError("Could not delete the book. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  if (isLoading) return <p className="books-status">Loading books...</p>;
+  if (error) return <p className="books-status books-error">{error}</p>;
+  if (books.length === 0) return <p className="books-status">No books found.</p>;
+
+  if (editingId !== null) {
     return (
       <EditBookForm
         bookId={editingId}
         onBookUpdated={() => {
           setEditingId(null);
-          setIsLoading(true);
-          getAllBooks()
-            .then(setBooks)
-            .catch(() => setError("Could not load books. Please try again later."))
-            .finally(() => setIsLoading(false));
+          fetchBooks();
         }}
       />
     );
@@ -54,22 +68,24 @@ export default function Books() {
 
   return (
     <div className="books-list">
+      {deleteError && <p className="books-error">{deleteError}</p>}
       {books.map((book) => (
         <div key={book.id} className="book-card">
           <h3>{book.title}</h3>
-          <p>
-            <strong>Author:</strong> {book.author}
-          </p>
-          <p>
-            <strong>Category:</strong> {book.category}
-          </p>
-          <p>
-            <strong>Year:</strong> {book.year}
-          </p>
-          <p>
-            <strong>Available:</strong> {book.available ? "Yes" : "No"}
-          </p>
-          <button onClick={() => setEditingId(book.id)}>Edit</button>
+          <p><strong>Author:</strong> {book.author}</p>
+          <p><strong>Category:</strong> {book.category}</p>
+          <p><strong>Year:</strong> {book.year}</p>
+          <p><strong>Available:</strong> {book.available ? "Yes" : "No"}</p>
+          <div className="book-card-actions">
+            <button onClick={() => setEditingId(book.id)}>Edit</button>
+            <button
+              onClick={() => handleDelete(book.id)}
+              disabled={deletingId === book.id}
+              className="delete-button"
+            >
+              {deletingId === book.id ? "Deleting..." : "Delete"}
+            </button>
+          </div>
         </div>
       ))}
     </div>
