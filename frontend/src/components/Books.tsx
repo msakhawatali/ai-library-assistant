@@ -2,12 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { getAllBooks, deleteBook } from "../services/booksApi";
 import type { Book } from "../services/booksApi";
 import EditBookForm from "./EditBookForm";
+import BookDetails from "./BookDetails";
 
 export default function Books() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [viewingId, setViewingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -54,6 +56,12 @@ export default function Books() {
   if (error) return <p className="books-status books-error">{error}</p>;
   if (books.length === 0) return <p className="books-status">No books found.</p>;
 
+  if (viewingId !== null) {
+  return (
+    <BookDetails bookId={viewingId} onBack={() => setViewingId(null)} />
+    );
+  }
+
   if (editingId !== null) {
     return (
       <EditBookForm
@@ -77,6 +85,7 @@ export default function Books() {
           <p><strong>Year:</strong> {book.year}</p>
           <p><strong>Available:</strong> {book.available ? "Yes" : "No"}</p>
           <div className="book-card-actions">
+            <button onClick={() => setViewingId(book.id)}>View</button>
             <button onClick={() => setEditingId(book.id)}>Edit</button>
             <button
               onClick={() => handleDelete(book.id)}
