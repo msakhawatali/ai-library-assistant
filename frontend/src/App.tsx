@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, NavLink } from "react-router-dom";
 import Header from "./components/Header";
 import Chat from "./components/Chat";
 import BooksPage from "./pages/BooksPage";
@@ -13,10 +13,21 @@ function App() {
       <div className="app">
         <Header />
         <nav className="main-nav">
-          <Link to="/chat">AI Chat</Link>
-          <Link to="/books">Books</Link>
+          <NavLink
+            to="/chat"
+            className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+          >
+            AI Chat
+          </NavLink>
+          <NavLink
+            to="/books"
+            className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
+          >
+            Books
+          </NavLink>
         </nav>
         <main className="main-content">
+          <div className="page-container">
           <Routes>
             <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route path="/chat" element={<Chat />} />
@@ -25,6 +36,7 @@ function App() {
             <Route path="/books/:id" element={<BookDetailsPage />} />
             <Route path="/books/:id/edit" element={<EditBookPage />} />
           </Routes>
+          </div>
         </main>
       </div>
     </BrowserRouter>
