@@ -93,7 +93,7 @@ export default function Books() {
                 <button onClick={() => navigate(`/books/${book.id}/edit`)}>Edit</button>
                 <button
                   onClick={() => handleDelete(book.id)}
-                  disabled={deletingId === book.id}
+                  disabled={deletingId !== null}
                   className="delete-button"
                 >
                   {deletingId === book.id ? "Deleting..." : "Delete"}
