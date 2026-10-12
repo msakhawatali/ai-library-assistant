@@ -61,11 +61,13 @@
   gap: var(--space-xl);
 }
 
+/* ---------- Chat ---------- */
+
 .chat {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 600px;
+  max-width: 500px;
   height: 500px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -149,6 +151,8 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ---------- Books page ---------- */
 
 .books-page-header {
   display: flex;
@@ -237,17 +241,6 @@
   transition: box-shadow 0.15s;
 }
 
-.book-card h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
-}
-
-.book-card p {
-  margin: 0.25rem 0;
-  font-size: 0.875rem;
-  color: #475569;
-}
-
 .book-card:hover {
   box-shadow: var(--shadow-md);
 }
@@ -321,6 +314,13 @@
   background-color: var(--color-danger-hover) !important;
 }
 
+.delete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- Add Book form ---------- */
+
 .add-book-form {
   max-width: 400px;
   margin: 1rem auto;
@@ -374,15 +374,6 @@
   color: #16a34a;
   font-size: 0.875rem;
 }
-.add-book-form,
-.chat {
-  width: 100%;
-  max-width: 500px;
-}
-
-.book-card button:hover {
-  background-color: #475569;
-}
 
 .form-status {
   text-align: center;
@@ -390,24 +381,8 @@
   color: #64748b;
 }
 
-.book-card-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
+/* ---------- Book details ---------- */
 
-.delete-button {
-  background-color: #dc2626 !important;
-}
-
-.delete-button:hover:not(:disabled) {
-  background-color: #b91c1c !important;
-}
-
-.delete-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 .book-details {
   width: 100%;
   max-width: 500px;
@@ -431,20 +406,14 @@
   margin: 0 0 0.75rem 0;
 }
 
+/* ---------- Nav ---------- */
+
 .main-nav {
   display: flex;
   gap: var(--space-md);
   padding: var(--space-sm) var(--space-lg);
   background-color: #111827;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.books-header {
-  width: 100%;
-  max-width: 900px;
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
 }
 
 .nav-link {
@@ -467,6 +436,8 @@
   background-color: var(--color-primary);
 }
 
+/* ---------- Base elements ---------- */
+
 button {
   font-family: inherit;
   border-radius: var(--radius-sm);
@@ -478,6 +449,8 @@ button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ---------- Responsive ---------- */
 
 @media (max-width: 640px) {
   .page-container {
