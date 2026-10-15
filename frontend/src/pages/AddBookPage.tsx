@@ -5,6 +5,9 @@ export default function AddBookPage() {
   const navigate = useNavigate();
 
   return (
-    <AddBookForm onBookAdded={() => navigate("/books")} />
+    <AddBookForm
+      onBookAdded={() => navigate("/books")}
+      onCancel={() => navigate("/books")}
+    />
   );
 }

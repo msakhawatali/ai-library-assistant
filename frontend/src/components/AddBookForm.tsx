@@ -3,9 +3,10 @@ import { createBook } from "../services/booksApi";
 
 interface AddBookFormProps {
   onBookAdded?: () => void;
+  onCancel?: () => void;
 }
 
-export default function AddBookForm({ onBookAdded }: AddBookFormProps) {
+export default function AddBookForm({ onBookAdded, onCancel }: AddBookFormProps) {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [category, setCategory] = useState("");
@@ -26,11 +27,26 @@ export default function AddBookForm({ onBookAdded }: AddBookFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
-    if (!title.trim() || !author.trim() || !category.trim() || !year) {
+    
+    if (
+      !title.trim() ||
+      !author.trim() ||
+      !category.trim() ||
+      !year.trim()
+    ) {
       setError("Please fill in all required fields.");
       return;
     }
+
+    const numericYear = Number(year);
+
+    if (!Number.isInteger(numericYear) || numericYear <= 0) {
+      setError("Please enter a valid publication year.");
+      return;
+    }
+
 
     setError(null);
     setSuccess(false);
@@ -41,7 +57,7 @@ export default function AddBookForm({ onBookAdded }: AddBookFormProps) {
         title: title.trim(),
         author: author.trim(),
         category: category.trim(),
-        year: Number(year),
+        year: numericYear,
         available,
       });
 
@@ -56,65 +72,83 @@ export default function AddBookForm({ onBookAdded }: AddBookFormProps) {
   };
 
   return (
-    <form className="add-book-form" onSubmit={handleSubmit}>
-      <h3>Add a New Book</h3>
+    <form className="book-form" onSubmit={handleSubmit}>
+      <div className="book-form-header">
+        <h2>Add a New Book</h2>
+        <p>Fill in the details below to add a book to the library.</p>
+      </div>
 
-      <label>
-        Title
+      <div className="form-field">
+        <label htmlFor="add-title">Title</label>
         <input
+          id="add-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           disabled={isSubmitting}
         />
-      </label>
+      </div>
 
-      <label>
-        Author
+      <div className="form-field">
+        <label htmlFor="add-author">Author</label>
         <input
+          id="add-author"
           type="text"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
           disabled={isSubmitting}
         />
-      </label>
+      </div>
 
-      <label>
-        Category
+      <div className="form-field">
+        <label htmlFor="add-category">Category</label>
         <input
+          id="add-category"
           type="text"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           disabled={isSubmitting}
         />
-      </label>
+      </div>
 
-      <label>
-        Year
+      <div className="form-field">
+        <label htmlFor="add-year">Year</label>
         <input
+          id="add-year"
           type="number"
           value={year}
           onChange={(e) => setYear(e.target.value)}
           disabled={isSubmitting}
         />
-      </label>
+      </div>
 
-      <label className="checkbox-label">
+      <div className="form-field form-field-checkbox">
         <input
+          id="add-available"
           type="checkbox"
           checked={available}
           onChange={(e) => setAvailable(e.target.checked)}
           disabled={isSubmitting}
         />
-        Available
-      </label>
+        <label htmlFor="add-available">Available</label>
+      </div>
 
-      {error && <p className="form-error">{error}</p>}
-      {success && <p className="form-success">Book added successfully!</p>}
+      {error && <p className="form-error" role="alert">{error}</p>}
+      {success && <p className="form-success" role="status">Book added successfully!</p>}
 
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Adding..." : "Add Book"}
-      </button>
+      <div className="form-actions">
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </button>
+        <button type="submit" className="btn-primary" disabled={isSubmitting}>
+          {isSubmitting ? "Adding..." : "Add Book"}
+        </button>
+      </div>
     </form>
   );
 }

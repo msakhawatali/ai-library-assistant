@@ -4,9 +4,14 @@ import { getBookById, updateBook } from "../services/booksApi";
 interface EditBookFormProps {
   bookId: number;
   onBookUpdated?: () => void;
+  onCancel?: () => void;
 }
 
-export default function EditBookForm({ bookId, onBookUpdated }: EditBookFormProps) {
+export default function EditBookForm({
+  bookId,
+  onBookUpdated,
+  onCancel,
+}: EditBookFormProps) {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [category, setCategory] = useState("");
@@ -15,13 +20,14 @@ export default function EditBookForm({ bookId, onBookUpdated }: EditBookFormProp
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const fetchBook = async () => {
       setIsLoading(true);
-      setError(null);
+      setLoadError(null);
       try {
         const book = await getBookById(bookId);
         setTitle(book.title);
@@ -30,7 +36,7 @@ export default function EditBookForm({ bookId, onBookUpdated }: EditBookFormProp
         setYear(String(book.year));
         setAvailable(book.available);
       } catch {
-        setError("Could not load book details. Please try again.");
+        setLoadError("Could not load book details. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -41,13 +47,28 @@ export default function EditBookForm({ bookId, onBookUpdated }: EditBookFormProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
-    if (!title.trim() || !author.trim() || !category.trim() || !year) {
-      setError("Please fill in all required fields.");
+
+    if (
+      !title.trim() ||
+      !author.trim() ||
+      !category.trim() ||
+      !year.trim()
+    ) {
+      setSubmitError("Please fill in all required fields.");
       return;
     }
 
-    setError(null);
+    const numericYear = Number(year);
+
+    if (!Number.isInteger(numericYear) || numericYear <= 0) {
+      setSubmitError("Please enter a valid publication year.");
+      return;
+    }
+
+
+    setSubmitError(null);
     setSuccess(false);
     setIsSubmitting(true);
 
@@ -56,14 +77,14 @@ export default function EditBookForm({ bookId, onBookUpdated }: EditBookFormProp
         title: title.trim(),
         author: author.trim(),
         category: category.trim(),
-        year: Number(year),
+        year: numericYear,
         available,
       });
 
       setSuccess(true);
       onBookUpdated?.();
     } catch {
-      setError("Could not update the book. Please try again.");
+      setSubmitError("Could not update the book. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -73,71 +94,97 @@ export default function EditBookForm({ bookId, onBookUpdated }: EditBookFormProp
     return <p className="form-status">Loading book details...</p>;
   }
 
-  if (error && !title) {
-    // Load hi fail ho gayi thi — form dikhane ka koi fayda nahi
-    return <p className="form-error">{error}</p>;
+  if (loadError) {
+    return (
+      <div className="book-form">
+        <p className="form-error" role="alert">{loadError}</p>
+        <div className="form-actions">
+          <button type="button" className="btn-secondary" onClick={onCancel}>
+            Back to Books
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <form className="add-book-form" onSubmit={handleSubmit}>
-      <h3>Edit Book</h3>
+    <form className="book-form" onSubmit={handleSubmit}>
+      <div className="book-form-header">
+        <h2>Edit Book</h2>
+        <p>Update the details below and save your changes.</p>
+      </div>
 
-      <label>
-        Title
+      <div className="form-field">
+        <label htmlFor="edit-title">Title</label>
         <input
+          id="edit-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           disabled={isSubmitting}
         />
-      </label>
+      </div>
 
-      <label>
-        Author
+      <div className="form-field">
+        <label htmlFor="edit-author">Author</label>
         <input
+          id="edit-author"
           type="text"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
           disabled={isSubmitting}
         />
-      </label>
+      </div>
 
-      <label>
-        Category
+      <div className="form-field">
+        <label htmlFor="edit-category">Category</label>
         <input
+          id="edit-category"
           type="text"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           disabled={isSubmitting}
         />
-      </label>
+      </div>
 
-      <label>
-        Year
+      <div className="form-field">
+        <label htmlFor="edit-year">Year</label>
         <input
+          id="edit-year"
           type="number"
           value={year}
           onChange={(e) => setYear(e.target.value)}
           disabled={isSubmitting}
         />
-      </label>
+      </div>
 
-      <label className="checkbox-label">
+      <div className="form-field form-field-checkbox">
         <input
+          id="edit-available"
           type="checkbox"
           checked={available}
           onChange={(e) => setAvailable(e.target.checked)}
           disabled={isSubmitting}
         />
-        Available
-      </label>
+        <label htmlFor="edit-available">Available</label>
+      </div>
 
-      {error && <p className="form-error">{error}</p>}
-      {success && <p className="form-success">Book updated successfully!</p>}
+      {submitError && <p className="form-error" role="alert">{submitError}</p>}
+      {success && <p className="form-success" role="status">Book updated successfully!</p>}
 
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Updating..." : "Update Book"}
-      </button>
+      <div className="form-actions">
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </button>
+        <button type="submit" className="btn-primary" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
     </form>
   );
 }

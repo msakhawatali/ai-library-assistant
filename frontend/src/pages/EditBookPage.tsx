@@ -9,6 +9,7 @@ export default function EditBookPage() {
     <EditBookForm
       bookId={Number(id)}
       onBookUpdated={() => navigate("/books")}
+      onCancel={() => navigate("/books")}
     />
   );
 }
