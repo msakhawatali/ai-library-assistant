@@ -6,6 +6,11 @@ export default function BookDetailsPage() {
   const navigate = useNavigate();
 
   return (
-    <BookDetails bookId={Number(id)} onBack={() => navigate("/books")} />
+    <BookDetails
+      key={bookId}
+      bookId={bookId}
+      onBack={() => navigate("/books")}
+      onEdit={() => navigate(`/books/${id}/edit`)}
+    />
   );
 }
